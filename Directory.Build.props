@@ -1,0 +1,19 @@
+<Project>
+  <!--
+    NuGet restore writes project.assets.json under obj\. On cloud-synced / UNC
+    shares (e.g. Cloud_Drive$ mapped as Y:) those files are frequently locked
+    ("Access denied"), which breaks restore/build.
+
+    Keep intermediates and default bin output on the local machine.
+    Strip the WPF _wpftmp suffix so temp compile projects share assets.json
+    with the real WPF project.
+  -->
+  <PropertyGroup>
+    <_IoLocalBuildRoot Condition="'$(_IoLocalBuildRoot)' == ''">$(LOCALAPPDATA)\ImageOrganiser\build\</_IoLocalBuildRoot>
+    <_IoProjectKey>$(MSBuildProjectName)</_IoProjectKey>
+    <_IoProjectKey Condition="$(MSBuildProjectName.Contains('_wpftmp'))">$([System.Text.RegularExpressions.Regex]::Replace($(MSBuildProjectName), '_[^_]+_wpftmp$', ''))</_IoProjectKey>
+    <BaseIntermediateOutputPath>$(_IoLocalBuildRoot)obj\$(_IoProjectKey)\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+    <BaseOutputPath>$(_IoLocalBuildRoot)bin\$(_IoProjectKey)\</BaseOutputPath>
+  </PropertyGroup>
+</Project>

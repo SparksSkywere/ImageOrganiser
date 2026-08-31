@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Burn Setup.exe bootstrapper for Image Organiser.
+
+  Displays the chained MSI UI (FeatureTree) so users can:
+  - Choose install folder
+  - Toggle Desktop shortcut
+  - Keep Start Menu shortcuts (on by default)
+
+  Bundle UpgradeCode is stable: installing a newer Setup.exe uninstalls the previous bundle.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
+
+  <Bundle Name="Image Organiser"
+          Version="1.0.0"
+          Manufacturer="Skywere Industries"
+          UpgradeCode="B5D29F38-7E6E-4C02-AF13-4E8B9D6C25A7"
+          Copyright="Copyright (c) Skywere Industries"
+          IconSourceFile="..\..\..\assets\installer.ico"
+          DisableModify="yes"
+          DisableRemove="no">
+
+    <Variable Name="InstallFolder"
+              Type="formatted"
+              Value="[ProgramFiles64Folder]Skywere Industries\ImageOrganiser\"
+              bal:Overridable="yes" />
+
+    <BootstrapperApplication>
+      <bal:WixStandardBootstrapperApplication
+          LicenseUrl=""
+          Theme="hyperlinkLicense"
+          SuppressOptionsUI="yes"
+          SuppressDowngradeFailure="no"
+          ShowVersion="yes" />
+    </BootstrapperApplication>
+
+    <Chain DisableSystemRestore="no">
+      <MsiPackage Id="ImageOrganiserMsi"
+                  SourceFile="$(var.ImageOrganiser.Installer.TargetPath)"
+                  DisplayName="Image Organiser"
+                  Visible="yes"
+                  Compressed="yes"
+                  Vital="yes"
+                  Permanent="no"
+                  ForcePerMachine="yes"
+                  bal:DisplayInternalUICondition="WixBundleAction = 6">
+        <MsiProperty Name="ARPSYSTEMCOMPONENT" Value="0" />
+      </MsiPackage>
+    </Chain>
+  </Bundle>
+</Wix>

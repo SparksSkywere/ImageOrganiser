@@ -1,0 +1,89 @@
+<Window x:Class="ImageOrganiser.Views.LocationsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Scan locations"
+        Height="640" Width="620"
+        MinHeight="520" MinWidth="540"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="False"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        Icon="pack://application:,,,/Assets/app.ico">
+
+    <DockPanel Margin="12" Background="{DynamicResource WindowBackgroundBrush}">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="OK" Width="88" Height="28" Margin="0,0,8,0"
+                    IsDefault="True" Click="Ok_Click"
+                    Style="{StaticResource PrimaryButtonStyle}"/>
+            <Button Content="Cancel" Width="88" Height="28"
+                    IsCancel="True" Click="Cancel_Click"
+                    Style="{StaticResource SecondaryButtonStyle}"/>
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="Where to look" Style="{StaticResource SectionHeaderStyle}"/>
+                <RadioButton Content="Entire PC — every ready drive (skips Windows / Program Files)"
+                             IsChecked="{Binding ScanEntirePc}" Margin="0,0,0,6"/>
+                <RadioButton Content="Selected drives, disks, and folders only"
+                             IsChecked="{Binding IsSelectedMode}" Margin="0,0,0,8"/>
+                <TextBlock Text="{Binding StatusText}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+
+                <TextBlock Text="Drives and disks" Style="{StaticResource SectionHeaderStyle}" Margin="0,16,0,8"/>
+                <TextBlock Text="Check a drive to include the whole disk. Uncheck it to skip that disk on an entire-PC scan, or to leave it out of a selected scan."
+                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Content="All drives" Style="{StaticResource ToolbarButtonStyle}" MinWidth="88"
+                            Command="{Binding SelectAllDrivesCommand}"/>
+                    <Button Content="No drives" Style="{StaticResource ToolbarButtonStyle}" MinWidth="88"
+                            Command="{Binding SelectNoDrivesCommand}"/>
+                </StackPanel>
+                <ItemsControl ItemsSource="{Binding Drives}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox Content="{Binding Display}" IsChecked="{Binding IsIncluded}" Margin="0,2"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <CheckBox Content="Include removable drives (USB, SD cards, cameras)"
+                          IsChecked="{Binding IncludeRemovable}" Margin="0,10,0,0"/>
+                <CheckBox Content="Include network drives" IsChecked="{Binding IncludeNetwork}"/>
+
+                <TextBlock Text="Folders" Style="{StaticResource SectionHeaderStyle}" Margin="0,16,0,8"/>
+                <TextBlock Text="Add camera dumps, Pictures, backup disks, or any folder tree. Used when “Selected drives, disks, and folders” is on. Adding a folder switches to that mode."
+                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <Button Content="Add folder…" Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding AddFolderCommand}"/>
+                    <Button Content="Pictures" Style="{StaticResource ToolbarButtonStyle}"
+                            Command="{Binding AddPicturesCommand}"/>
+                    <Button Content="Desktop" Style="{StaticResource ToolbarButtonStyle}"
+                            Command="{Binding AddDesktopCommand}"/>
+                    <Button Content="Downloads" Style="{StaticResource ToolbarButtonStyle}"
+                            Command="{Binding AddDownloadsCommand}"/>
+                    <Button Content="Documents" Style="{StaticResource ToolbarButtonStyle}"
+                            Command="{Binding AddDocumentsCommand}"/>
+                    <Button Content="OneDrive" Style="{StaticResource ToolbarButtonStyle}"
+                            Command="{Binding AddOneDriveCommand}"/>
+                </StackPanel>
+                <Border Background="{DynamicResource PanelBackgroundBrush}"
+                        BorderBrush="{DynamicResource BorderBrushSubtle}"
+                        BorderThickness="1" CornerRadius="3" MinHeight="120">
+                    <ListBox ItemsSource="{Binding Folders}"
+                             SelectedItem="{Binding SelectedFolder}"
+                             BorderThickness="0" Height="140">
+                        <ListBox.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Remove folder" Command="{Binding RemoveFolderCommand}"/>
+                            </ContextMenu>
+                        </ListBox.ContextMenu>
+                    </ListBox>
+                </Border>
+                <Button Content="Remove selected folder" Margin="0,8,0,0" HorizontalAlignment="Left"
+                        Style="{StaticResource ToolbarButtonStyle}"
+                        Command="{Binding RemoveFolderCommand}"/>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

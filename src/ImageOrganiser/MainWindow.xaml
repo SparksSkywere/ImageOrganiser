@@ -1,0 +1,463 @@
+<Window x:Class="ImageOrganiser.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:ImageOrganiser.ViewModels"
+        Title="Image Organiser"
+        Height="760" Width="1280"
+        MinHeight="560" MinWidth="980"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource WindowBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        Icon="pack://application:,,,/Assets/app.ico">
+
+    <Window.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding ScanCommand}"/>
+        <KeyBinding Key="F6" Command="{Binding ScanEntirePcCommand}"/>
+        <KeyBinding Key="F7" Command="{Binding ScanSelectedCommand}"/>
+        <KeyBinding Key="L" Modifiers="Control" Command="{Binding ChooseLocationsCommand}"/>
+        <KeyBinding Key="F" Modifiers="Control" Command="{Binding FindSimilarToFileCommand}"/>
+        <KeyBinding Key="Escape" Command="{Binding CancelCommand}"/>
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding ExportCommand}"/>
+        <KeyBinding Key="Left" Command="{Binding PreviousGroupCommand}"/>
+        <KeyBinding Key="Right" Command="{Binding NextGroupCommand}"/>
+        <KeyBinding Key="D1" Modifiers="Control" Command="{Binding KeepLeftDeleteRightCommand}"/>
+        <KeyBinding Key="D2" Modifiers="Control" Command="{Binding KeepRightDeleteLeftCommand}"/>
+        <KeyBinding Key="Delete" Command="{Binding ApplyDeletesCommand}"/>
+    </Window.InputBindings>
+
+    <DockPanel Background="{DynamicResource WindowBackgroundBrush}">
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Scan" InputGestureText="F5" Command="{Binding ScanCommand}"
+                          ToolTip="Scan the current locations (entire PC or the drives and folders you picked)"/>
+                <MenuItem Header="Scan _entire PC" InputGestureText="F6" Command="{Binding ScanEntirePcCommand}"/>
+                <MenuItem Header="Scan _selected locations" InputGestureText="F7" Command="{Binding ScanSelectedCommand}"/>
+                <MenuItem Header="Scan _locations..." InputGestureText="Ctrl+L" Command="{Binding ChooseLocationsCommand}"/>
+                <MenuItem Header="_Cancel scan" InputGestureText="Esc" Command="{Binding CancelCommand}"/>
+                <Separator/>
+                <MenuItem Header="Find photos like _this file…" InputGestureText="Ctrl+F" Command="{Binding FindSimilarToFileCommand}"
+                          ToolTip="Fingerprint a photo and find close or identical copies from the last scan"/>
+                <Separator/>
+                <MenuItem Header="_Export list..." InputGestureText="Ctrl+S" Command="{Binding ExportCommand}"/>
+                <MenuItem Header="Open _config folder" Command="{Binding OpenConfigFolderCommand}"/>
+                <Separator/>
+                <MenuItem Header="_Relaunch as administrator" Command="{Binding RelaunchAsAdminCommand}"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Click="Exit_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="Keep _left, delete right" InputGestureText="Ctrl+1" Command="{Binding KeepLeftDeleteRightCommand}"/>
+                <MenuItem Header="Keep _right, delete left" InputGestureText="Ctrl+2" Command="{Binding KeepRightDeleteLeftCommand}"/>
+                <MenuItem Header="_Delete marked copies" InputGestureText="Del" Command="{Binding ApplyDeletesCommand}"/>
+                <MenuItem Header="_Skip this group" Command="{Binding SkipGroupCommand}"/>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Next group" InputGestureText="Right" Command="{Binding NextGroupCommand}"/>
+                <MenuItem Header="_Previous group" InputGestureText="Left" Command="{Binding PreviousGroupCommand}"/>
+                <Separator/>
+                <MenuItem Header="Clear _log" Command="{Binding ClearLogCommand}"/>
+            </MenuItem>
+            <MenuItem Header="_Tools">
+                <MenuItem Header="Scan _locations..." InputGestureText="Ctrl+L" Command="{Binding ChooseLocationsCommand}"/>
+                <MenuItem Header="Find photos like this _file…" Command="{Binding FindSimilarToFileCommand}"/>
+                <Separator/>
+                <MenuItem Header="_Options..." Click="Options_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="Send _feedback on GitHub…" Click="Feedback_Click"/>
+                <MenuItem Header="Open Git_Hub repository…" Click="GitHub_Click"/>
+                <Separator/>
+                <MenuItem Header="_About Image Organiser" Click="About_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <Border DockPanel.Dock="Top" Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,0,0,1" Padding="6,4">
+            <DockPanel LastChildFill="True">
+                <!-- Dock filter first so it always has room and never sits under the actions. -->
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" Margin="12,0,0,0">
+                    <TextBlock Text="Filter:" VerticalAlignment="Center" Margin="0,0,6,0"
+                               Style="{StaticResource MutedTextStyle}"/>
+                    <TextBox Width="160" VerticalAlignment="Center"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Filter groups by file name, path, or fingerprint"/>
+                    <TextBlock Text="Match:" VerticalAlignment="Center" Margin="10,0,6,0"
+                               Style="{StaticResource MutedTextStyle}"/>
+                    <ComboBox Width="148" VerticalAlignment="Center"
+                              ItemsSource="{Binding MatchFilterOptions}"
+                              SelectedItem="{Binding SelectedMatchFilter}"
+                              ToolTip="Exact copies, same photo, or close look-alikes"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="{Binding ScanButtonText}" Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding ScanCommand}" MinWidth="96"
+                            ToolTip="Scan the current locations (F5)"/>
+                    <Button Content="Scan PC" Style="{StaticResource ToolbarButtonStyle}"
+                            Command="{Binding ScanEntirePcCommand}" ToolTip="Scan every ready drive (F6)"/>
+                    <Button Content="Locations" Style="{StaticResource ToolbarButtonStyle}"
+                            Command="{Binding ChooseLocationsCommand}"
+                            ToolTip="Choose drives, disks, and folders (Ctrl+L)"/>
+                    <Button Content="Find similar" Style="{StaticResource ToolbarButtonStyle}"
+                            Command="{Binding FindSimilarToFileCommand}"
+                            ToolTip="Fingerprint a photo and find close matches (Ctrl+F)"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Border DockPanel.Dock="Top" Background="{DynamicResource HeaderBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,0,0,1" Padding="10,6">
+            <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                <Run Text="Looking in:" Foreground="{DynamicResource MutedTextBrush}"/>
+                <Run Text="  "/>
+                <Run Text="{Binding ScopeText, Mode=OneWay}" FontWeight="SemiBold"/>
+            </TextBlock>
+        </Border>
+
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <Grid Width="16" Height="16" Margin="0,0,8,0"
+                          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}">
+                        <Ellipse Width="14" Height="14" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2"
+                                 StrokeDashArray="2.5 1.5" RenderTransformOrigin="0.5,0.5">
+                            <Ellipse.RenderTransform>
+                                <RotateTransform/>
+                            </Ellipse.RenderTransform>
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetProperty="(Ellipse.RenderTransform).(RotateTransform.Angle)"
+                                                             From="0" To="360" Duration="0:0:0.9"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                    </Grid>
+                    <TextBlock Text="{Binding StatusText}" MinWidth="240" VerticalAlignment="Center"/>
+                </StackPanel>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <TextBlock Text="{Binding SummaryText}" Style="{StaticResource MutedTextStyle}"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding ProgressPercentText}"
+                               MinWidth="36" Margin="0,0,8,0"
+                               VerticalAlignment="Center" FontWeight="SemiBold"
+                               Foreground="{DynamicResource AccentBrush}"
+                               Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}"/>
+                    <ProgressBar Width="140" Height="14"
+                                 Minimum="0" Maximum="100"
+                                 Value="{Binding ProgressValue}"
+                                 IsIndeterminate="{Binding IsProgressIndeterminate}"/>
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <Button Content="Cancel" Padding="8,2" Margin="6,0,0,0" MinWidth="72"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding CancelCommand}"
+                        Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <Grid Margin="0" Background="{DynamicResource WindowBackgroundBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="120"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" Margin="10,8,10,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="340" MinWidth="240"/>
+                    <ColumnDefinition Width="6"/>
+                    <ColumnDefinition Width="*" MinWidth="400"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0"
+                        Background="{DynamicResource PanelBackgroundBrush}"
+                        BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="2">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Border Padding="10,8" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,0,0,1"
+                                Background="{DynamicResource HeaderBackgroundBrush}">
+                            <TextBlock Text="Duplicate groups" FontWeight="SemiBold"/>
+                        </Border>
+                        <ListView Grid.Row="1"
+                                  x:Name="GroupList"
+                                  ItemsSource="{Binding GroupsView}"
+                                  SelectedItem="{Binding SelectedGroup}"
+                                  BorderThickness="0"
+                                  AlternationCount="2"
+                                  SelectionMode="Single"
+                                  VirtualizingPanel.IsVirtualizing="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling">
+                            <ListView.Resources>
+                                <Style TargetType="ListViewItem">
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                    <Setter Property="Padding" Value="4,3"/>
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListViewItem">
+                                                <Border x:Name="Bd"
+                                                        Background="{TemplateBinding Background}"
+                                                        Padding="{TemplateBinding Padding}"
+                                                        SnapsToDevicePixels="True">
+                                                    <GridViewRowPresenter Content="{TemplateBinding Content}"
+                                                                          Columns="{TemplateBinding GridView.ColumnCollection}"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ListAltRowBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ListHoverBrush}"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ListSelectionBrush}"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListView.Resources>
+                            <ListView.View>
+                                <GridView ColumnHeaderContainerStyle="{StaticResource ThemedGridViewColumnHeader}">
+                                    <GridViewColumn Header="#" Width="36">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Count}" HorizontalAlignment="Center"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Match" Width="88">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding KindText}"
+                                                           Foreground="{DynamicResource AccentBrush}"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Close" Width="52">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding SimilarityText}"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Waste" Width="64">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding WastedText}"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                    <GridViewColumn Header="Photo" Width="120">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding SampleName}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding SampleName}"
+                                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </Grid>
+                </Border>
+
+                <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch"
+                              Background="{DynamicResource WindowBackgroundBrush}"/>
+
+                <Border Grid.Column="2"
+                        Background="{DynamicResource PanelBackgroundBrush}"
+                        BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="2">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Padding="10,8" BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,0,0,1"
+                                Background="{DynamicResource HeaderBackgroundBrush}">
+                            <DockPanel>
+                                <TextBlock Text="{Binding KeepHint}" Style="{StaticResource MutedTextStyle}"
+                                           DockPanel.Dock="Right" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding SelectedGroup.Header, FallbackValue='Compare photos'}"
+                                           FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                            </DockPanel>
+                        </Border>
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                      Padding="10">
+                            <ItemsControl ItemsSource="{Binding SelectedGroup.Photos}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="2"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type vm:PhotoItemViewModel}">
+                                        <Border Margin="6" Padding="8"
+                                                Background="{DynamicResource PanelElevatedBrush}"
+                                                BorderBrush="{DynamicResource BorderBrushSubtle}"
+                                                BorderThickness="1" CornerRadius="3">
+                                            <DockPanel>
+                                                <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                                                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                                        <Button Content="Keep this, delete others"
+                                                                Style="{StaticResource PrimaryButtonStyle}"
+                                                                Command="{Binding DataContext.KeepThisDeleteOthersCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}"
+                                                                ToolTip="Keep this file and delete the other copies in the group"/>
+                                                        <Button Content="Mark delete" Margin="4,0,0,0"
+                                                                Style="{StaticResource SecondaryButtonStyle}"
+                                                                Command="{Binding DataContext.MarkForDeleteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}"/>
+                                                    </StackPanel>
+                                                    <CheckBox Content="Delete this copy"
+                                                              IsChecked="{Binding IsMarkedForDelete}"
+                                                              VerticalAlignment="Center"/>
+                                                </DockPanel>
+
+                                                <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                                                    <DockPanel>
+                                                        <TextBlock Text="{Binding RecommendationText}"
+                                                                   DockPanel.Dock="Right"
+                                                                   Foreground="{DynamicResource AccentBrush}"
+                                                                   FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding FileName}" FontWeight="SemiBold"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   ToolTip="{Binding Path}"/>
+                                                    </DockPanel>
+                                                    <TextBlock Text="{Binding MetaSummary}" Margin="0,2,0,0"
+                                                               Style="{StaticResource MutedTextStyle}"/>
+                                                    <TextBlock Text="{Binding SimilarityText}" Margin="0,2,0,0"
+                                                               Foreground="{DynamicResource AccentBrush}"/>
+                                                    <TextBlock Text="{Binding FingerprintText}" Margin="0,2,0,0"
+                                                               FontFamily="{StaticResource AppFontMono}" FontSize="11"
+                                                               Style="{StaticResource MutedTextStyle}"
+                                                               ToolTip="pHash · dHash · aHash visual fingerprint"/>
+                                                    <TextBlock Text="{Binding Directory}" Margin="0,2,0,0"
+                                                               Style="{StaticResource MutedTextStyle}"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               ToolTip="{Binding Directory}"/>
+                                                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                                        <Button Content="Open" Style="{StaticResource ToolbarButtonStyle}"
+                                                                MinWidth="64" Command="{Binding OpenFileCommand}"/>
+                                                        <Button Content="Show in folder" Style="{StaticResource ToolbarButtonStyle}"
+                                                                MinWidth="96" Command="{Binding OpenFolderCommand}"/>
+                                                        <Button Content="Find similar" Style="{StaticResource ToolbarButtonStyle}"
+                                                                MinWidth="96"
+                                                                Command="{Binding DataContext.FindSimilarCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                CommandParameter="{Binding}"
+                                                                ToolTip="Search the last scan for fingerprints close to this photo"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <Border MinHeight="220" MaxHeight="360"
+                                                        Background="{DynamicResource ControlBackgroundBrush}"
+                                                        BorderBrush="{DynamicResource BorderBrushSubtle}"
+                                                        BorderThickness="1">
+                                                    <Grid>
+                                                        <TextBlock Text="Preview unavailable"
+                                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                                   Style="{StaticResource MutedTextStyle}"
+                                                                   Visibility="{Binding PreviewFailed, Converter={StaticResource BoolToVisibility}}"/>
+                                                        <Image Source="{Binding Preview}" Stretch="Uniform"
+                                                               RenderOptions.BitmapScalingMode="HighQuality"
+                                                               Visibility="{Binding PreviewFailed, Converter={StaticResource InverseBoolToVisibility}}"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <Border Grid.Row="2" Padding="10,8"
+                                BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,1,0,0"
+                                Background="{DynamicResource HeaderBackgroundBrush}"
+                                Visibility="{Binding SelectedGroup, Converter={StaticResource NullToVisibility}}">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Content="Previous" Style="{StaticResource ToolbarButtonStyle}"
+                                        Command="{Binding PreviousGroupCommand}"/>
+                                <Button Content="Delete marked copies" Style="{StaticResource SecondaryButtonStyle}"
+                                        Command="{Binding ApplyDeletesCommand}"/>
+                                <Button Content="Skip group" Style="{StaticResource ToolbarButtonStyle}"
+                                        Command="{Binding SkipGroupCommand}"/>
+                                <Button Content="Next" Style="{StaticResource PrimaryButtonStyle}"
+                                        Command="{Binding NextGroupCommand}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Row="0" Grid.RowSpan="3"
+                                Background="{DynamicResource PanelBackgroundBrush}"
+                                Visibility="{Binding ShowEmptyState, Converter={StaticResource BoolToVisibility}}"
+                                IsHitTestVisible="True">
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="440">
+                                <TextBlock Text="{Binding EmptyStateTitle}"
+                                           FontSize="16" FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" TextAlignment="Center"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <TextBlock Text="{Binding EmptyStateDetail}"
+                                           Margin="0,8,0,0" TextAlignment="Center" TextWrapping="Wrap"
+                                           HorizontalAlignment="Center"
+                                           Style="{StaticResource MutedTextStyle}"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
+                                    <Button Content="Scan entire PC" Style="{StaticResource PrimaryButtonStyle}"
+                                            Command="{Binding ScanEntirePcCommand}"/>
+                                    <Button Content="Choose folders…" Margin="8,0,0,0"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Command="{Binding ChooseLocationsCommand}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <GridSplitter Grid.Row="1" Height="6" HorizontalAlignment="Stretch"
+                          Background="{DynamicResource WindowBackgroundBrush}"/>
+
+            <Border Grid.Row="2" Margin="10,0,10,8"
+                    Background="{DynamicResource PanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="1" CornerRadius="2">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Border Padding="8,4" Background="{DynamicResource HeaderBackgroundBrush}"
+                            BorderBrush="{DynamicResource BorderBrushSubtle}" BorderThickness="0,0,0,1">
+                        <DockPanel>
+                            <Button Content="Clear" DockPanel.Dock="Right" Padding="8,1" MinWidth="56"
+                                    Style="{StaticResource ToolbarButtonStyle}"
+                                    Command="{Binding ClearLogCommand}"/>
+                            <TextBlock Text="Activity" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding LogLines}" BorderThickness="0"
+                             FontFamily="{StaticResource AppFontMono}" FontSize="11"/>
+                </Grid>
+            </Border>
+        </Grid>
+    </DockPanel>
+</Window>

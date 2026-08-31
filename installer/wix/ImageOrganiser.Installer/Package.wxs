@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Windows Installer package (MSI) for Image Organiser.
+  Feature tree UI: browse install folder + Start Menu and Desktop shortcuts (on by default).
+
+  Upgrade / uninstall:
+  - Stable UpgradeCode + MajorUpgrade removes previous installs (including same version rebuilds).
+  - CloseApplication stops a running instance so files are not locked.
+  - Install folder path is written to the registry; RemoveFolderEx cleans orphans on uninstall/upgrade.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <Package Name="Image Organiser"
+           Language="1033"
+           Version="1.0.0"
+           Manufacturer="Skywere Industries"
+           UpgradeCode="A4C18E27-6F5D-4B91-9E02-3D7A8C5B14F6"
+           Scope="perMachine"
+           InstallerVersion="500">
+
+    <SummaryInformation Description="Find the same photo across every drive even when the file name, size, or resolution is different."
+                        Manufacturer="Skywere Industries" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed. Uninstall it first if you need to roll back."
+                  AllowSameVersionUpgrades="yes"
+                  Schedule="afterInstallInitialize" />
+
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Icon Id="AppIcon.ico" SourceFile="..\..\..\assets\installer.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="ARPHELPLINK" Value="https://skywere.com" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+    <Property Id="IO_INSTALL_DIR">
+      <RegistrySearch Id="FindIoInstallDir"
+                      Root="HKLM"
+                      Key="Software\Skywere Industries\ImageOrganiser"
+                      Name="InstallDir"
+                      Type="raw" />
+    </Property>
+
+    <util:CloseApplication Id="CloseImageOrganiser"
+                           Target="ImageOrganiser.exe"
+                           CloseMessage="yes"
+                           ElevatedCloseMessage="yes"
+                           RebootPrompt="no"
+                           TerminateProcess="2000"
+                           PromptToContinue="no" />
+
+    <ui:WixUI Id="WixUI_FeatureTree" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+    <Feature Id="ProductFeature"
+             Title="Image Organiser"
+             Description="Program files"
+             Level="1"
+             ConfigurableDirectory="INSTALLFOLDER"
+             AllowAbsent="no"
+             Display="expand">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentRef Id="AppRegistration" />
+
+      <Feature Id="StartMenuShortcutFeature"
+               Title="Start Menu shortcuts"
+               Description="Create shortcuts under Start Menu\Skywere Industries"
+               Level="1"
+               AllowAbsent="yes">
+        <ComponentRef Id="AppShortcuts" />
+      </Feature>
+
+      <Feature Id="DesktopShortcutFeature"
+               Title="Desktop shortcut"
+               Description="Create an Image Organiser shortcut on the Desktop"
+               Level="1"
+               AllowAbsent="yes">
+        <ComponentRef Id="DesktopShortcutComponent" />
+      </Feature>
+    </Feature>
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="CompanyFolder" Name="Skywere Industries">
+        <Directory Id="INSTALLFOLDER" Name="ImageOrganiser" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="AppProgramMenuFolder" Name="Skywere Industries" />
+    </StandardDirectory>
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Files Include="!(bindpath.Payload)\**">
+        <Exclude Files="!(bindpath.Payload)\**\*.pdb" />
+      </Files>
+    </ComponentGroup>
+
+    <Component Id="AppRegistration"
+               Directory="INSTALLFOLDER"
+               Guid="C6E3A049-8F7F-4D13-B024-5F9C0E7D36B8"
+               Bitness="always64">
+      <RegistryValue Root="HKLM"
+                     Key="Software\Skywere Industries\ImageOrganiser"
+                     Name="InstallDir"
+                     Type="string"
+                     Value="[INSTALLFOLDER]"
+                     KeyPath="yes" />
+      <RegistryValue Root="HKLM"
+                     Key="Software\Skywere Industries\ImageOrganiser"
+                     Name="Installed"
+                     Type="integer"
+                     Value="1" />
+      <RegistryValue Root="HKLM"
+                     Key="Software\Skywere Industries\ImageOrganiser"
+                     Name="Version"
+                     Type="string"
+                     Value="[ProductVersion]" />
+      <util:RemoveFolderEx Id="RemoveInstallFolderEx"
+                           Property="IO_INSTALL_DIR"
+                           On="uninstall" />
+      <RemoveFolder Id="RemoveInstallFolder" Directory="INSTALLFOLDER" On="uninstall" />
+    </Component>
+
+    <Component Id="AppShortcuts"
+               Directory="INSTALLFOLDER"
+               Guid="D7F4B15A-9080-4E24-C135-6A0D1F8E47C9"
+               Bitness="always64">
+      <RegistryValue Root="HKLM"
+                     Key="Software\Skywere Industries\ImageOrganiser"
+                     Name="Shortcuts"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+      <Shortcut Id="StartMenuAppShortcut"
+                Directory="AppProgramMenuFolder"
+                Name="Image Organiser"
+                Description="Find matching and similar photos across your drives"
+                Target="[INSTALLFOLDER]ImageOrganiser.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon.ico"
+                IconIndex="0" />
+      <Shortcut Id="StartMenuUninstallShortcut"
+                Directory="AppProgramMenuFolder"
+                Name="Uninstall Image Organiser"
+                Description="Uninstall Image Organiser"
+                Target="[System64Folder]msiexec.exe"
+                Arguments="/x [ProductCode]"
+                Icon="AppIcon.ico"
+                IconIndex="0" />
+      <RemoveFolder Id="RemoveAppProgramMenuFolder" Directory="AppProgramMenuFolder" On="uninstall" />
+    </Component>
+
+    <Component Id="DesktopShortcutComponent"
+               Directory="INSTALLFOLDER"
+               Guid="E805C26B-A191-4F35-D246-7B1E209F58DA"
+               Bitness="always64">
+      <RegistryValue Root="HKLM"
+                     Key="Software\Skywere Industries\ImageOrganiser"
+                     Name="DesktopShortcut"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+      <Shortcut Id="DesktopAppShortcut"
+                Directory="DesktopFolder"
+                Name="Image Organiser"
+                Description="Find matching and similar photos across your drives"
+                Target="[INSTALLFOLDER]ImageOrganiser.exe"
+                WorkingDirectory="INSTALLFOLDER"
+                Icon="AppIcon.ico"
+                IconIndex="0" />
+    </Component>
+
+  </Package>
+</Wix>

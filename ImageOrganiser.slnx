@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ImageOrganiser/ImageOrganiser.csproj" />
+  </Folder>
+  <Folder Name="/installer/">
+    <Project Path="installer/wix/ImageOrganiser.Installer/ImageOrganiser.Installer.wixproj" />
+    <Project Path="installer/wix/ImageOrganiser.Bundle/ImageOrganiser.Bundle.wixproj" />
+  </Folder>
+</Solution>
